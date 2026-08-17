@@ -1,37 +1,49 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_dashboard/core/constants/app_colors.dart';
 
+import '../../domain/entities/image_entity.dart';
+import '../bloc/dashboard_cubit.dart';
+import '../bloc/dashboard_state.dart';
+import '../widgets/delete_confirm_dialog.dart';
+
 class DashboardPage extends StatelessWidget {
+  const DashboardPage({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.mainBackground,
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SidebarWidget(),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(32.0),
-              child: Column(
-                children: [
-                  _HeaderWidget(),
-                  const SizedBox(height: 32),
+    // 🟢 Hatanın çözümü: Sayfayı BlocProvider ile sarmalayıp verileri yüklüyoruz
+    return BlocProvider(
+      create: (context) => DashboardGridCubit()..fetchImages(),
+      child: Scaffold(
+        backgroundColor: AppColors.mainBackground,
+        body: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _SidebarWidget(),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  children: const [
+                    _HeaderWidget(),
+                    SizedBox(height: 32),
 
-                  const _StatsSectionWidget(),
-                  const SizedBox(height: 32),
+                    _StatsSectionWidget(),
+                    SizedBox(height: 32),
 
-                  const _GalleryHeaderWidget(),
-                  const SizedBox(height: 20),
+                    _GalleryHeaderWidget(),
+                    SizedBox(height: 20),
 
-                  const _ImageGridWidget(),
-                ],
+                    _ImageGridWidget(),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -158,11 +170,11 @@ class _SidebarWidget extends StatelessWidget {
 }
 
 Widget _buildNavItem(
-  IconData icon,
-  String title, {
-  bool isActive = false,
-  String? badgeText,
-}) {
+    IconData icon,
+    String title, {
+      bool isActive = false,
+      String? badgeText,
+    }) {
   return GestureDetector(
     onTap: () {},
     child: Container(
@@ -225,7 +237,7 @@ class _HeaderWidget extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        Spacer(),
+        const Spacer(),
         Row(
           children: [
             // Search Input
@@ -259,7 +271,10 @@ class _HeaderWidget extends StatelessWidget {
 
             // + Upload Button
             ElevatedButton.icon(
-              onPressed: () {},
+              onPressed: () {
+                  context.read<DashboardGridCubit>().pickAndUploadImage();
+
+              },
               icon: const Icon(
                 Icons.add,
                 color: AppColors.primaryText,
@@ -368,7 +383,7 @@ class _StatCard extends StatelessWidget {
           children: [
             Text(
               title,
-              style: TextStyle(
+              style: const TextStyle(
                 color: AppColors.secondaryAccent,
                 fontSize: 11,
                 letterSpacing: 1,
@@ -401,8 +416,9 @@ class _GalleryHeaderWidget extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
+        // İleride resim sayısını state'ten dinamik çekmek istersen BlocBuilder ekleyebilirsin
         const Text(
-          '6 görsel',
+          'Görseller',
           style: TextStyle(color: AppColors.secondaryText, fontSize: 13),
         ),
         Row(
@@ -441,15 +457,57 @@ class _GalleryHeaderWidget extends StatelessWidget {
 }
 
 class _ImageGridWidget extends StatelessWidget {
-
-  const _ImageGridWidget();
+  const _ImageGridWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
+    return BlocBuilder<DashboardGridCubit, DashboardGridState>(
+      builder: (context, state) {
+
+        // 1. Ekran Yüklenirken (Loading State)
+        if (state is DashboardLoading) {
+          final previousImages = state.previousImages;
+
+          if (previousImages == null || previousImages.isEmpty) {
+            return const Center(
+              child: CircularProgressIndicator.adaptive(),
+            );
+          }
+
+          return _buildGrid(context, images: previousImages);
+        }
+
+        // 2. Yükleme Başarılı Tamamlandığında (Success State)
+        if (state is DashboardLoadedSuccessfuly) {
+          final images = state.images;
+
+          if (images.isEmpty) {
+            return const Center(
+              child: Text("Henüz hiç görsel yüklenmedi."),
+            );
+          }
+
+          return _buildGrid(context, images: images);
+        }
+
+        // 3. Hata Durumu (Error State)
+        if (state is DashboardError) {
+          return Center(
+            child: Text("Bir hata oluştu: ${state.message}"),
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+  /// GridView Tasarımı
+  Widget _buildGrid(BuildContext context, {required List<Object?> images}) {
     return GridView.builder(
       shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: 4,
+      physics: const BouncingScrollPhysics(),
+      itemCount: images.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 4,
         crossAxisSpacing: 16,
@@ -457,21 +515,82 @@ class _ImageGridWidget extends StatelessWidget {
         childAspectRatio: 1.1,
       ),
       itemBuilder: (context, index) {
-        return Container(
+        final item = images[index];
+
+        // 🟢 ELEMAN NULL İSE: Yükleniyor Kartı (Silme ikonu koymuyoruz)
+        if (item == null) {
+          return Container(
             decoration: BoxDecoration(
               color: AppColors.cardBackground,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.primaryText.withOpacity(0.05)),
-            ),
-            child: Center(
-              child: Icon(
-                Icons.image_outlined,
-                color: AppColors.secondaryText.withOpacity(0.3),
-                size: 48,
+              border: Border.all(
+                color: AppColors.primaryText.withOpacity(0.05),
               ),
             ),
+            child: const Center(
+              child: CircularProgressIndicator.adaptive(),
+            ),
           );
+        }
+
+        // 🟢 ELEMAN DOLU İSE: Resim ve Sağ Üstte Delete İkonu
+        final image = item as ImageEntity;
+
+        return Stack(
+          children: [
+            // Resim Kartı
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  image: DecorationImage(
+                    image: NetworkImage(image.url),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
+
+            // Sağ Üst Silme İkonu (UI Uyumlu & Şeffaf Dark Arka Planlı)
+            // Sağ Üst Silme İkonu (Daha Büyük & Belirgin Yuvarlak Tasarım)
+            Positioned(
+              top: 10,
+              right: 10,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    DeleteConfirmDialog.show(
+                      context,
+                      onConfirm: () {
+                        context.read<DashboardGridCubit>().deleteImage(image.id!);
+                      },
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(28),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.65), // Karartmayı biraz artırdık
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.2), // Şık bir kenarlık çizgisi
+                        width: 1,
+                      ),
+                    ),
+                    child:  Icon(
+                      Icons.delete_forever_rounded, // Daha dolgun ve belirgin silme ikonu
+                      color: Color(0xFFCC9BDD),
+                      size: 24, // İkon boyutunu 18'den 24'e çıkardık
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
       },
     );
   }
 }
+
