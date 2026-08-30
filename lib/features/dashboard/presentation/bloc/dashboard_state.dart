@@ -13,7 +13,6 @@ class DashboardLoading extends DashboardGridState {
 }
 
 
-
 class DashboardError extends DashboardGridState {
   final String message;
   DashboardError(this.message);
@@ -22,6 +21,26 @@ class DashboardError extends DashboardGridState {
 class DashboardLoadedSuccessfuly extends DashboardGridState{
 
   final List<ImageEntity> images;
-  DashboardLoadedSuccessfuly({required this.images});
+  final String difficultyLevel;
+
+  DashboardLoadedSuccessfuly({required this.images, required this.difficultyLevel});
 
 }
+
+class VideoLoading extends DashboardGridState{
+
+}
+
+class VideoLoadedSuccessfuly extends DashboardGridState{
+
+}
+
+
+class ErrorVideoLoading extends DashboardGridState{
+
+  final String message;
+
+  ErrorVideoLoading({required this.message});
+
+}
+

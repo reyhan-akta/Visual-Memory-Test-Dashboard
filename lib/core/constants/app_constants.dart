@@ -2,4 +2,10 @@
 
 abstract class AppConstants {
   static const String imgBbApiKey = '8ad2f3cdf681ce91a3bd5b0fe6ac2732';
+
+  static const String imageCloudName = 'a4amycsl';
+  static const String imageUploadPreset = 'ef0oj7pv';
+
+  static const String googleStudioApiKey = 'AQ.Ab8RN6LCfpI80JFCbt3uM_olKn4hmVa7nHNStR3f7zn5yUmsyg';
+  static const String modelName = 'gemini-3.1-flash-lite';
 }

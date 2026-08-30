@@ -3,11 +3,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_dashboard/core/constants/app_colors.dart';
-
 import '../../domain/entities/image_entity.dart';
 import '../bloc/dashboard_cubit.dart';
 import '../bloc/dashboard_state.dart';
 import '../widgets/delete_confirm_dialog.dart';
+import 'image_detail_page.dart';
+import 'image_item_widget.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -413,45 +414,105 @@ class _GalleryHeaderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        // İleride resim sayısını state'ten dinamik çekmek istersen BlocBuilder ekleyebilirsin
-        const Text(
-          'Görseller',
-          style: TextStyle(color: AppColors.secondaryText, fontSize: 13),
-        ),
-        Row(
+    return BlocBuilder<DashboardGridCubit, DashboardGridState>(
+      builder: (context, state) {
+
+        String? currentDifficultyLevel ;
+
+        if (state is DashboardLoadedSuccessfuly) {
+          currentDifficultyLevel = state.difficultyLevel;
+        }
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.cardBackground,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.grid_view_rounded,
-                      size: 18,
-                      color: AppColors.primaryAccent,
-                    ),
-                    onPressed: () {},
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.format_list_bulleted,
-                      size: 18,
-                      color: AppColors.secondaryText,
-                    ),
-                    onPressed: () {},
-                  ),
-                ],
+            const Text(
+              'Görseller',
+              style: TextStyle(
+                color: AppColors.secondaryText,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
               ),
             ),
+            Row(
+              children: [
+                // 🟢 Seviye Dropdown Bileşeni
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBackground,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppColors.primaryText.withOpacity(0.05),
+                    ),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: currentDifficultyLevel ?? 'Kolay',
+                      icon: const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: AppColors.secondaryText,
+                        size: 20,
+                      ),
+                      dropdownColor: AppColors.cardBackground,
+                      borderRadius: BorderRadius.circular(8),
+                      style: const TextStyle(
+                        color: AppColors.primaryText,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      items: <String>['Kolay', 'Orta', 'Zor'].map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (String? newLevel) {
+                        if (newLevel != null) {
+
+                          context
+                              .read<DashboardGridCubit>()
+                              .changeDifficulty(newLevel);
+                        }
+                      },
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                // Grid / List Görünüm Butonları
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBackground,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.grid_view_rounded,
+                          size: 18,
+                          color: AppColors.primaryAccent,
+                        ),
+                        onPressed: () {},
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.format_list_bulleted,
+                          size: 18,
+                          color: AppColors.secondaryText,
+                        ),
+                        onPressed: () {},
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 }
@@ -517,7 +578,7 @@ class _ImageGridWidget extends StatelessWidget {
       itemBuilder: (context, index) {
         final item = images[index];
 
-        // 🟢 ELEMAN NULL İSE: Yükleniyor Kartı (Silme ikonu koymuyoruz)
+        // 🟢 ELEMAN NULL İSE: Yükleniyor Kartı
         if (item == null) {
           return Container(
             decoration: BoxDecoration(
@@ -538,21 +599,45 @@ class _ImageGridWidget extends StatelessWidget {
 
         return Stack(
           children: [
-            // Resim Kartı
+            // 1. RESİM KARTI VE TIKLAMA ALANI (Tüm kartı kaplar)
             Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  image: DecorationImage(
-                    image: NetworkImage(image.url),
-                    fit: BoxFit.cover,
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: () {
+                    // Detay sayfasına yönlendirme
+                   /* Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ImageDetailPage(
+                          imageUrl: image.url,
+                          imageName: image.id ?? 'Görsel ${index + 1}',
+                        ),
+
+                      ),
+
+
+
+                    ); */
+
+                    ImageItemWidget.showAddVideoDialog(context,index, image.url, imageId: image.id);
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      image: DecorationImage(
+                        image: NetworkImage(image.url),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
 
-            // Sağ Üst Silme İkonu (UI Uyumlu & Şeffaf Dark Arka Planlı)
-            // Sağ Üst Silme İkonu (Daha Büyük & Belirgin Yuvarlak Tasarım)
+            // 2. SAĞ ÜST SİLME İKONU (Tıklaması resim kartından bağımsızdır)
             Positioned(
               top: 10,
               right: 10,
@@ -571,17 +656,17 @@ class _ImageGridWidget extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.65), // Karartmayı biraz artırdık
+                      color: Colors.black.withOpacity(0.65),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.2), // Şık bir kenarlık çizgisi
+                        color: Colors.white.withOpacity(0.2),
                         width: 1,
                       ),
                     ),
-                    child:  Icon(
-                      Icons.delete_forever_rounded, // Daha dolgun ve belirgin silme ikonu
+                    child: const Icon(
+                      Icons.delete_forever_rounded,
                       color: Color(0xFFCC9BDD),
-                      size: 24, // İkon boyutunu 18'den 24'e çıkardık
+                      size: 24,
                     ),
                   ),
                 ),

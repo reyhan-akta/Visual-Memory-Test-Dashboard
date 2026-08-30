@@ -5,24 +5,22 @@ class ImageModel {
   final String? id;
   final String url;
   final DateTime createdAt;
-  final String deleteUrl;
 
-  ImageModel({this.id, required this.url, required this.createdAt, required this.deleteUrl});
+  ImageModel({this.id, required this.url, required this.createdAt});
 
   factory ImageModel.fromMap(Map<String, dynamic> json, String docId) {
     return ImageModel(
       id: docId,
       url: json['imageUrl'] as String? ?? '',
       createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      deleteUrl:  json['deleteUrl']
     );
   }
 
   Map<String, dynamic> toMap() {
-    return {'imageUrl': url, 'createdAt': createdAt, 'deleteUrl':deleteUrl};
+    return {'imageUrl': url, 'createdAt': createdAt,};
   }
 
   ImageEntity toEntity() {
-    return ImageEntity(id: id, url: url, createdAt: createdAt, deleteUrl: deleteUrl);
+    return ImageEntity(id: id, url: url, createdAt: createdAt,);
   }
 }
