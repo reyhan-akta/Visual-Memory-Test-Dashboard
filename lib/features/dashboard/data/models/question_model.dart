@@ -5,7 +5,8 @@ class QuestionModel extends QuestionEntity {
     required super.question,
     required super.choices,
     required super.correct,
-    required super.difficulty,
+    super.rawJson
+
   });
 
   factory QuestionModel.fromEntity(QuestionEntity entity) {
@@ -13,16 +14,17 @@ class QuestionModel extends QuestionEntity {
       question: entity.question,
       choices: entity.choices,
       correct: entity.correct,
-      difficulty: entity.difficulty,
+      rawJson: entity.rawJson
+
     );
   }
 
-  factory QuestionModel.fromMap(Map<String, dynamic> map) {
+  factory QuestionModel.fromMap(Map<String, dynamic> map, {String? rawJson }) {
     return QuestionModel(
       question: map['question'] ?? '',
       choices: List<String>.from(map['choices'] ?? []),
       correct: map['correct'] ?? '',
-      difficulty: map['difficulty'] ?? 'orta',
+      rawJson: rawJson
     );
   }
 
@@ -31,7 +33,7 @@ class QuestionModel extends QuestionEntity {
       'question': question,
       'choices': choices,
       'correct': correct,
-      'difficulty': difficulty,
+
     };
   }
 
@@ -40,7 +42,7 @@ class QuestionModel extends QuestionEntity {
       question: question,
       choices: choices,
       correct: correct,
-      difficulty: difficulty,
+      rawJson: rawJson
     );
   }
 

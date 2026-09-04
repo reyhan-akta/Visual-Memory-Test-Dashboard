@@ -50,7 +50,7 @@ class DashboardGridCubit extends Cubit<DashboardGridState> {
         final pureData = file.bytes!;
 
         final prevImages = <ImageEntity?>[null,...?previousImages];
-        emit(DashboardLoading(previousImages: prevImages));
+        emit(DashboardLoading(previousImages: prevImages,difficultyLevel: currentDifficultyLevel));
 
 
         final imageDownloadUrl = await dashboardRemoteDataSource
@@ -85,13 +85,14 @@ class DashboardGridCubit extends Cubit<DashboardGridState> {
   Future<void> fetchImages() async {
 
     List<ImageEntity>? previousImages ;
-
+    String difficulty = '';
 
     if(state is DashboardLoadedSuccessfuly){
       previousImages = (state as DashboardLoadedSuccessfuly).images;
+      difficulty = (state as DashboardLoadedSuccessfuly).difficultyLevel;
     }
 
-    emit(DashboardLoading(previousImages: previousImages));
+    emit(DashboardLoading(previousImages: previousImages,difficultyLevel: difficulty));
 
     try {
       final imageCloudData = await dashboardRemoteDataSource.fetchDashImages('Kolay');

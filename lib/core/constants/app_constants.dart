@@ -6,6 +6,6 @@ abstract class AppConstants {
   static const String imageCloudName = 'a4amycsl';
   static const String imageUploadPreset = 'ef0oj7pv';
 
-  static const String googleStudioApiKey = 'AQ.Ab8RN6LCfpI80JFCbt3uM_olKn4hmVa7nHNStR3f7zn5yUmsyg';
-  static const String modelName = 'gemini-3.1-flash-lite';
+  static const String googleStudioApiKey = 'AQ.Ab8RN6Jo5Im0tZ4WqEFuYQYB0aSY8KaEacL4hjkfmq1dZhjhtQ';
+  static const String modelName = 'gemini-2.5-flash';
 }

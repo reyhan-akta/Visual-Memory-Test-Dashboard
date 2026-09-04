@@ -1,11 +1,13 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:get_storage/get_storage.dart';
 import 'core/constants/app_colors.dart';
 import 'core/constants/firebase_api_constant.dart';
 import 'features/dashboard/presentation/pages/dashboard_page.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
+  await GetStorage.init();
 
   await Firebase.initializeApp(
     options: const FirebaseOptions(
@@ -20,6 +22,8 @@ void main() async{
 
   runApp(const MyApp());
 }
+
+final appStorage = GetStorage();
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

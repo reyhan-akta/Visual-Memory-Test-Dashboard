@@ -11,7 +11,7 @@ import 'image_detail_page.dart';
 import 'image_item_widget.dart';
 
 class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
+   DashboardPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -525,9 +525,12 @@ class _ImageGridWidget extends StatelessWidget {
     return BlocBuilder<DashboardGridCubit, DashboardGridState>(
       builder: (context, state) {
 
+
+
         // 1. Ekran Yüklenirken (Loading State)
         if (state is DashboardLoading) {
           final previousImages = state.previousImages;
+          final String difficultyLevel = state.difficultyLevel;
 
           if (previousImages == null || previousImages.isEmpty) {
             return const Center(
@@ -535,12 +538,14 @@ class _ImageGridWidget extends StatelessWidget {
             );
           }
 
-          return _buildGrid(context, images: previousImages);
+          return _buildGrid(context, images: previousImages,difficultyLevel: difficultyLevel);
         }
+
 
         // 2. Yükleme Başarılı Tamamlandığında (Success State)
         if (state is DashboardLoadedSuccessfuly) {
           final images = state.images;
+          final String difficultyLevel = state.difficultyLevel;
 
           if (images.isEmpty) {
             return const Center(
@@ -548,9 +553,8 @@ class _ImageGridWidget extends StatelessWidget {
             );
           }
 
-          return _buildGrid(context, images: images);
+          return _buildGrid(context, images: images,difficultyLevel: difficultyLevel);
         }
-
         // 3. Hata Durumu (Error State)
         if (state is DashboardError) {
           return Center(
@@ -564,7 +568,7 @@ class _ImageGridWidget extends StatelessWidget {
   }
 
   /// GridView Tasarımı
-  Widget _buildGrid(BuildContext context, {required List<Object?> images}) {
+  Widget _buildGrid(BuildContext context, {required List<Object?> images, required String difficultyLevel}) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const BouncingScrollPhysics(),
@@ -608,21 +612,8 @@ class _ImageGridWidget extends StatelessWidget {
                 child: InkWell(
                   onTap: () {
                     // Detay sayfasına yönlendirme
-                   /* Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ImageDetailPage(
-                          imageUrl: image.url,
-                          imageName: image.id ?? 'Görsel ${index + 1}',
-                        ),
 
-                      ),
-
-
-
-                    ); */
-
-                    ImageItemWidget.showAddVideoDialog(context,index, image.url, imageId: image.id);
+                    ImageItemWidget.showAddVideoDialog(context,index, difficultyLevel,image.url, imageId: image.id);
                   },
                   child: Container(
                     decoration: BoxDecoration(

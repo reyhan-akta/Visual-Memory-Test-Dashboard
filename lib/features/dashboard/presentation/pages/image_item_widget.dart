@@ -11,6 +11,7 @@ class ImageItemWidget {
   static void showAddVideoDialog(
       BuildContext context,
       int index,
+      String difficultyLevel,
       String imageUrl, {
         String? imageId,
       }) {
@@ -48,7 +49,7 @@ class ImageItemWidget {
                   // Yükleme Başarılı: Dialog'u kapat ve Detay Sayfasına Yönlendir
                   if (state is VideoLoadedSuccessfuly) {
                     Navigator.pop(dialogContext);
-                    _navigateToDetailPage(context, imageUrl, imageId, index);
+                    _navigateToDetailPage(context, imageUrl, imageId, index,difficultyLevel);
                   }
 
                   // Hata Durumu
@@ -192,7 +193,7 @@ class ImageItemWidget {
                             : () {
                           Navigator.pop(dialogContext);
                           _navigateToDetailPage(
-                              context, imageUrl, imageId, index);
+                              context, imageUrl, imageId, index,difficultyLevel);
                         },
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
@@ -229,6 +230,7 @@ class ImageItemWidget {
       String imageUrl,
       String? imageId,
       int index,
+      String difficultyLevel
       ) {
     Navigator.push(
       context,
@@ -238,7 +240,9 @@ class ImageItemWidget {
           child: Builder(
             builder: (innerContext) {
               return ImageDetailPage(
+                difficultyLevel:difficultyLevel,
                 imageUrl: imageUrl,
+                imageId: imageId ?? '',
                 imageName: imageId ?? 'Görsel ${index + 1}',
               );
             },

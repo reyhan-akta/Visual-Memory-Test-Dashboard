@@ -7,8 +7,9 @@ class DashboardInitial extends DashboardGridState {}
 class DashboardLoading extends DashboardGridState {
 
   final List<ImageEntity?>? previousImages;
+  final String difficultyLevel;
 
-  DashboardLoading({this.previousImages});
+  DashboardLoading({this.previousImages, required this.difficultyLevel});
 
 }
 
